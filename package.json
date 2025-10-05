@@ -1,0 +1,1 @@
+{"name":"electron-ai-browser","version":"1.0.0","description":"Minimal browser using Google search + ChatGPT AI sidebar (Electron)","main":"main.js","scripts":{"start":"electron ."},"keywords":[],"author":"","license":"MIT","devDependencies":{"electron":"^38.2.1"}}
