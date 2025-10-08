@@ -1,13 +1,22 @@
 const { app, BrowserWindow } = require('electron');
+const path = require('path');
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
-    webPreferences: { nodeIntegration: true }
+    width: 1280,
+    height: 800,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: true,
+      contextIsolation: false,
+      webviewTag: true, // ✅ REQUIRED for <webview> to appear
+    },
   });
 
-  win.loadURL('https://google.com'); // Example: loads Google
+  win.loadFile('index.html');
+
+  // Optional: open dev tools to debug
+  // win.webContents.openDevTools();
 }
 
 app.whenReady().then(createWindow);
