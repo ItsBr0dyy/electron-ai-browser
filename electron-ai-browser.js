@@ -50,7 +50,7 @@ max_tokens = max_tokens || 500;
 const resp = await fetch('https://api.openai.com/v1/chat/completions', {
   method: 'POST',
   headers: {
-    'Authorization': `Bearer ${key}`,
+    'Authorization': `Bearer ${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}`,
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -72,8 +72,8 @@ return { answer, raw: data };
 // Construct messages: put context first (if any)
 const messages = [];
 if (context && context.trim().length > 0) {
-  messages.push({ role: 'system', content: 'You are a helpful assistant that bases answers only on the provided context when possible.' });
-  messages.push({ role: 'system', content: `CONTEXT:\n${context}` });
+  messages.push({ role: 'system', content: "You are a helpful assistant that bases answers only on the provided context when possible." });
+  messages.push({ role: 'system', content: "CONTEXT:\n${context}" });
 } else {
   messages.push({ role: 'system', content: 'You are a helpful assistant.' });
 }
@@ -83,10 +83,10 @@ messages.push({ role: 'user', content: question });
 model = model || 'gpt-4o-mini'; // change if you prefer another model you have access to
 max_tokens = max_tokens || 500;
 
-const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-  method: 'POST',
+const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+  method: "POST",
   headers: {
-    'Authorization': `Bearer ${key}`,
+    'Authorization': `${key}`,
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
