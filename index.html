@@ -1,72 +1,26 @@
-<!doctype html>
+const { app, BrowserWindow } = require('electron');
+const path = require('path');
 
-<html>
-  <head>
-    <meta charset="utf-8"/>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval'">
-    <title>AI Browser — Google + ChatGPT</title>
-    <link rel="stylesheet" href="style.css">
-  </head>
-  <body>
-    <div id="topbar">
-      <input id="addr" placeholder="Enter a URL or search (press Enter)" />
-      <button id="goBtn">Go</button>
-      <button id="backBtn" title="Back">◀</button>
-      <button id="forwardBtn" title="Forward">▶</button>
-      <label class="checkbox"><input type="checkbox" id="usePageContext"> Use page as context</label>
-    </div>
+function createWindow() {
+  const win = new BrowserWindow({
+    width: 1280,
+    height: 800,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: true,
+      contextIsolation: false,
+      webviewTag: true, // ✅ REQUIRED for <webview> to appear
+    },
+  });
 
-```
-<div id="main">
-  <div id="browserPane">
-    <!-- webview is a real browser; Google works correctly -->
-    <webview id="webview" src="https://www.google.com" partition="persist:webview" style="width:100%; height:100%"></webview>
-  </div>
+  win.loadFile('index.html');
 
-  <div id="aiPane">
-    <div id="aiHeader">
-      <h3>ChatGPT Assistant</h3>
-    </div>
-    <div id="chatArea"></div>
-    <div id="inputArea">
-      <textarea id="q" placeholder="Ask the AI..."></textarea>
-      <div id="controls">
-        <select id="modelSelect">
-          <option value="gpt-4o-mini">gpt-4o-mini</option>
-          <option value="gpt-4o">gpt-4o</option>
-          <option value="gpt-4o-mini-em">gpt-4o-mini-em</option>
-        </select>
-        <button id="askBtn">Ask</button>
-        <button id="clearBtn">Clear</button>
-      </div>
-    </div>
-  </div>
-</div>
+  // Optional: open dev tools to debug
+  // win.webContents.openDevTools();
+}
 
-<script src="renderer.js"></script>
-```
+app.whenReady().then(createWindow);
 
-  </body>
-</html>
-
-=== style.css ===
-body { margin:0; font-family: system-ui, sans-serif; height:100vh; display:flex; flex-direction:column; }
-#topbar { display:flex; gap:8px; padding:8px; align-items:center; background:#f4f4f7; border-bottom:1px solid #ddd; }
-#addr { flex:1; padding:8px; font-size:14px; }
-#topbar button { padding:6px 10px; }
-.checkbox { display:flex; align-items:center; gap:6px; font-size:13px; margin-left:8px; }
-#main { display:flex; flex:1; height: calc(100vh - 56px); }
-#browserPane { flex:2; border-right:1px solid #ddd; }
-#aiPane { width:360px; display:flex; flex-direction:column; }
-#aiHeader { padding:12px; border-bottom:1px solid #eee; background:#fafafa; }
-#chatArea { flex:1; padding:12px; overflow:auto; background:white; }
-.message { margin-bottom:10px; }
-.message.user { text-align:right; }
-.message .bubble { display:inline-block; padding:8px 10px; border-radius:10px; max-width:100%; }
-.message.user .bubble { background:#cde8ff; }
-.message.ai .bubble { background:#f1f1f5; }
-#inputArea { padding:8px; border-top:1px solid #eee; background:#fff; }
-#q { width:100%; height:64px; padding:8px; resize:vertical; font-size:14px; }
-#controls { display:flex; gap:8px; margin-top:8px; align-items:center; }
-#controls select { padding:6px; }
-#controls button { padding:6px 10px; }
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
+});
