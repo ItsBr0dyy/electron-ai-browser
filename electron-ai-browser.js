@@ -50,7 +50,7 @@ max_tokens = max_tokens || 500;
 const resp = await fetch('https://api.openai.com/v1/chat/completions', {
   method: 'POST',
   headers: {
-    'Authorization': `Bearer ${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}`,
+    'Authorization': `Bearer ${key}`,
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -118,3 +118,4 @@ const { canceled, filePaths } = await dialog.showOpenDialog({ properties: ['open
 if (canceled || filePaths.length === 0) return null;
 return filePaths[0];
 });
+
