@@ -1,54 +1,150 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>My Browser</title>
+    <title>ElectronAI</title>
     <style>
+      :root {
+        --bar-bg: #202124;
+        --tab-bg: #2a2b2e;
+        --tab-active: #35363a;
+        --text: #e8eaed;
+        --accent: #8ab4f8;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         margin: 0;
         background: #1e1e1e;
-        font-family: sans-serif;
-        color: white;
+        color: var(--text);
+        font-family: 'Segoe UI', Arial, sans-serif;
+        overflow: hidden;
       }
 
-      .topbar {
+      /* Tabs row */
+      .tabs {
         display: flex;
         align-items: center;
-        background: #2b2b2b;
-        padding: 6px;
+        height: 34px;
+        background: var(--tab-bg);
+        padding: 0 8px;
+        border-bottom: 1px solid #3c4043;
       }
 
-      input#url {
-        flex: 1;
+      .tab {
+        padding: 4px 12px;
+        margin-right: 6px;
+        border-radius: 6px 6px 0 0;
+        background: var(--tab-bg);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text);
+        font-size: 13px;
+        user-select: none;
+      }
+
+      .tab.active {
+        background: var(--tab-active);
+        color: var(--accent);
+      }
+
+      .tab span.close {
+        font-size: 12px;
+        opacity: 0.6;
+        cursor: pointer;
+      }
+
+      /* Top bar / omnibox */
+      .omnibox {
+        display: flex;
+        align-items: center;
+        background: var(--bar-bg);
         padding: 6px 10px;
-        border: none;
-        border-radius: 6px;
+        height: 46px;
+        position: relative;
+      }
+
+      .lock,
+      .refresh,
+      .extensions,
+      .profile {
+        font-size: 18px;
         margin: 0 8px;
+        cursor: pointer;
+        opacity: 0.8;
+      }
+
+      .urlbar {
+        flex: 1;
+        background: #303134;
+        border: none;
+        border-radius: 20px;
+        padding: 8px 14px;
+        font-size: 15px;
+        color: var(--text);
         outline: none;
       }
 
-      button {
-        background: #0078d7;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        padding: 6px 12px;
-        cursor: pointer;
+      /* Extensions dropdown */
+      .ext-menu {
+        position: absolute;
+        top: 50px;
+        right: 50px;
+        background: #2b2b2b;
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        display: none;
+        flex-direction: column;
+        width: 220px;
+      }
+
+      .ext-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
       }
 
       webview {
         width: 100%;
-        height: calc(100vh - 50px);
+        height: calc(100vh - 80px);
         border: none;
       }
     </style>
   </head>
   <body>
-    <div class="topbar">
-      <button id="back">←</button>
-      <button id="forward">→</button>
-      <input id="url" placeholder="Search Google or type URL" />
-      <button id="go">Go</button>
+    <div class="tabs" id="tabs">
+      <div class="tab active">New Tab <span class="close">✕</span></div>
+      <button id="newtab" style="margin-left:auto;">＋</button>
+    </div>
+
+    <div class="omnibox">
+      <span class="lock">🔒</span>
+      <input id="url" class="urlbar" placeholder="Search Google or type a URL" />
+      <span class="refresh">⟳</span>
+      <span class="extensions">🧩</span>
+      <span class="profile">👤</span>
+
+      <div class="ext-menu" id="extMenu">
+        <div class="ext-item">
+          <span>Dark Reader</span>
+          <input type="checkbox" class="ext-toggle" data-script="darkreader.js" />
+        </div>
+        <div class="ext-item">
+          <span>Auto Scroll</span>
+          <input type="checkbox" class="ext-toggle" data-script="autoscroll.js" />
+        </div>
+        <div class="ext-item">
+          <span>7TV</span>
+          <input type="checkbox" class="ext-toggle" data-script="7tv.js" />
+        </div>
+      </div>
     </div>
 
     <webview id="web" src="https://www.google.com" allowpopups></webview>
@@ -56,20 +152,66 @@
     <script>
       const webview = document.getElementById("web");
       const urlInput = document.getElementById("url");
+      const refreshBtn = document.querySelector(".refresh");
+      const newTabBtn = document.getElementById("newtab");
+      const tabsContainer = document.getElementById("tabs");
+      const extBtn = document.querySelector(".extensions");
+      const extMenu = document.getElementById("extMenu");
 
-      document.getElementById("go").onclick = () => {
-        let val = urlInput.value.trim();
-        if (!val.startsWith("http")) {
-          val = "https://www.google.com/search?q=" + encodeURIComponent(val);
+      // URL handling
+      urlInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          let val = urlInput.value.trim();
+          if (!val.startsWith("http")) {
+            val = "https://www.google.com/search?q=" + encodeURIComponent(val);
+          }
+          webview.src = val;
         }
-        webview.src = val;
-      };
-
-      document.getElementById("back").onclick = () => webview.goBack();
-      document.getElementById("forward").onclick = () => webview.goForward();
+      });
 
       webview.addEventListener("did-navigate", (e) => {
         urlInput.value = e.url;
+      });
+
+      refreshBtn.onclick = () => webview.reload();
+
+      // Tabs
+      newTabBtn.onclick = () => {
+        const tab = document.createElement("div");
+        tab.className = "tab";
+        tab.innerHTML = "New Tab <span class='close'>✕</span>";
+        tabsContainer.insertBefore(tab, newTabBtn);
+        setActiveTab(tab);
+      };
+
+      tabsContainer.addEventListener("click", (e) => {
+        if (e.target.classList.contains("close")) {
+          e.target.parentElement.remove();
+        } else if (e.target.classList.contains("tab")) {
+          setActiveTab(e.target);
+        }
+      });
+
+      function setActiveTab(tab) {
+        document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+        webview.src = "https://www.google.com";
+      }
+
+      // Extensions dropdown toggle
+      extBtn.onclick = () => {
+        extMenu.style.display = extMenu.style.display === "flex" ? "none" : "flex";
+      };
+
+      // Extension toggles
+      document.querySelectorAll(".ext-toggle").forEach((toggle) => {
+        toggle.addEventListener("change", async (e) => {
+          const scriptPath = `extensions/${e.target.dataset.script}`;
+          const code = await (await fetch(scriptPath)).text();
+          if (e.target.checked) {
+            webview.executeJavaScript(code);
+          }
+        });
       });
     </script>
   </body>
